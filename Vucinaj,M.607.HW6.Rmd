@@ -1,0 +1,81 @@
+---
+title: "Vucinaj,M.607.Hw6"
+author: "Marjete"
+date: "2022-10-03"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Assignment 6– Tidying and Transforming Data
+(1) Create a .CSV file (or optionally, a MySQL database!) that includes all of the information above.
+You’re encouraged to use a “wide” structure similar to how the information appears above, so
+that you can practice tidying and transformations as described below.
+(2) Read the information from your .CSV file into R, and use tidyr and dplyr as needed to tidy
+and transform your data.
+(3) Perform analysis to compare the arrival delays for the two airlines.
+(4) Your code should be in an R Markdown file, posted to rpubs.com, and should include narrative
+descriptions of your data cleanup work, analysis, and conclusions. Please include in your
+homework submission:
+ The URL to the .Rmd file in your GitHub repository. and
+ The URL for your rpubs.com web page.
+
+```{r }
+#load libraries
+library(tidyr)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+data <- read.csv("https://raw.githubusercontent.com/marjete/flights.607/main/flights.607.csv") 
+data
+```
+
+
+```{r}
+data[2,1] <- data[1,1] #add alaska and amwest to the row where its blank
+data[5,1] <- data[4,1]
+data[,2] <- sapply(data[,2], str_replace, " ", ".")
+data
+```
+```{r}
+data <- data %>% drop_na #removes row with na
+data
+```
+```{r}
+data <- data %>%
+rename("company" = 1, "status" = 2) #column rename
+data
+```
+```{r}
+data <- data %>% 
+  gather(destination, flight.count, 3:7) #change wide structure to long
+data
+```
+```
+
+```{r}
+ddply(data, "company", transform, perct = flight.count / sum(flight.count)) %>% 
+  filter(status == "delayed") %>%
+  group_by(company) %>% 
+  dplyr::summarise(total_perct = sum(perct)) 
+```
+Compare the arrival delays for the two airlines; in a general comparision: 13% of Alaska airlines are typically delayed whereas, about 11% of Amwest flight are delayed. This doesnt seem like much of a difference so next I will look more closely per desitnation. Graphing the data might be helpful but finding the exact % of on delayed flights per destination and company would be best. 
+
+```{r}
+flightstatus <- spread(data, status, flight.count)
+flightstatus <- flightstatus %>%
+mutate(total = rowSums(across(where(is.numeric))))
+flightstatus
+```
+```{r}
+summary <- flightstatus %>%
+group_by (company, destination) %>%
+summarise(total_delayed = sum(delayed), total_ontime = sum(on.time))%>%
+mutate(total = rowSums(across(where(is.numeric))),
+       percent_delayed = round(total_delayed / total*100, 2),
+       percent_ontime = round (total_ontime / total*100, 2))
+summary
+```
+Conclusion: When comparing airline companies arrival delays per destination, the data above reflects that 28.7%  of flights to San Francisco with AMWest were delayed. The next highest amount of delays are also with Amwest to Seattle. Flights to Phoenix have the highest rates of being on time, with only 5% delay with Alaska airlines and ~8% delay with AMWest. 
