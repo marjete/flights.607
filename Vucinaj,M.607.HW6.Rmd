@@ -25,7 +25,6 @@ homework submission:
 library(tidyr)
 library(plyr)
 library(dplyr)
-library(ggplot2)
 library(stringr)
 
 data <- read.csv("https://raw.githubusercontent.com/marjete/flights.607/main/flights.607.csv") 
@@ -34,7 +33,7 @@ data
 
 
 ```{r}
-data[2,1] <- data[1,1] #add alaska and amwest to the row where its blank
+data[2,1] <- data[1,1]  #add alaska and amwest to the row where its blank
 data[5,1] <- data[4,1]
 data[,2] <- sapply(data[,2], str_replace, " ", ".")
 data
